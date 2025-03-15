@@ -6,7 +6,11 @@ on:
       tag:
         description: "Tag for the release"
         required: true
-
+      script:
+        description: "Script to run for the release"
+        required: false
+        default: "yarn build"
+      
 permissions:
   contents: read
 
@@ -19,3 +23,4 @@ jobs:
     uses: step-security/reusable-workflows/.github/workflows/actions_release.yaml@v1
     with:
       tag: "${{ github.event.inputs.tag }}"
+      script: "${{ github.event.inputs.script }}"
