@@ -1275,16 +1275,16 @@ jobs:
         shell:
           bash
       - name: Check dir_names output on non windows platform
-        if: "!contains(steps.changed-files-dir-names-max-depth.outputs.all_changed_files, 'test/test2/test3') && runner.os != 'Windows'"
+        if: "!contains(steps.changed-files-dir-names-max-depth.outputs.all_changed_files, 'test/test/test3') && runner.os != 'Windows'"
         run: |
-          echo "Invalid output: Expected to include (test/test2/test3) got (${{ steps.changed-files-dir-names-max-depth.outputs.all_changed_files }})"
+          echo "Invalid output: Expected to include (test/test/test3) got (${{ steps.changed-files-dir-names-max-depth.outputs.all_changed_files }})"
           exit 1
         shell:
           bash
       - name: Check dir_names output on windows platform
-        if: "!contains(steps.changed-files-dir-names-max-depth.outputs.all_changed_files, 'test\\test2\\test3') && runner.os == 'Windows'"
+        if: "!contains(steps.changed-files-dir-names-max-depth.outputs.all_changed_files, 'test\\test\\test3') && runner.os == 'Windows'"
         run: |
-          echo "Invalid output: Expected to not include (test\\test2\\test3) got (${{ steps.changed-files-dir-names-max-depth.outputs.all_changed_files }})"
+          echo "Invalid output: Expected to not include (test\\test\\test3) got (${{ steps.changed-files-dir-names-max-depth.outputs.all_changed_files }})"
           exit 1
         shell:
           bash
