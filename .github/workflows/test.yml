@@ -967,8 +967,8 @@ jobs:
         id: changed-files-recover-deleted-files-within-submodule
         uses: ./
         with:
-          base_sha: "3be651e99d3d4eae395694f6c6f3b9d18457f6c8"
-          sha: "d90c240f2ad4ec04d8f0f48e5ac290ad96ebe850"
+          base_sha: "99b016ac470be10c92e4d92741f4c6a22f062d41"
+          sha: "11a7e7b727c1e155944175ea33f196c3a32cc45f"
           recover_deleted_files: true
           fetch_depth: 60000
 
