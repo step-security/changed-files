@@ -213,9 +213,9 @@ jobs:
           since: "2022-08-19"
 
       - name: Check output
-        if: "!contains(steps.changed-files-since.outputs.all_changed_files, '.github/workflows/sync-release-version.yml')"
+        if: "!contains(steps.changed-files-since.outputs.all_changed_files, '.github/workflows/actions_release.yml')"
         run: |
-          echo "Invalid output: Expected to include (.github/workflows/sync-release-version.yml) got (${{ steps.changed-files-since.outputs.all_changed_files }})"
+          echo "Invalid output: Expected to include (.github/workflows/actions_release.yml) got (${{ steps.changed-files-since.outputs.all_changed_files }})"
           exit 1
         shell:
           bash
