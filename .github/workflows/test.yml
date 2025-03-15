@@ -1263,8 +1263,8 @@ jobs:
         id: changed-files-dir-names-max-depth
         uses: ./
         with:
-          base_sha: ba788ed
-          sha: 0a5b7c6
+          base_sha: 4334499669d402f0860799e2838f7bed22154ae4
+          sha: 40c21f412c57e41b60d76d58f8181ae637e12a37
           fetch_depth: 60000
           dir_names: "true"
           dir_names_max_depth: 3
