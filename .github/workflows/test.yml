@@ -73,14 +73,14 @@ jobs:
         env:
           GITHUB_EVENT_PULL_REQUEST_HEAD_REPO_FORK: ${{ github.event.pull_request.head.repo.fork }}
 
-      - name: Verify Changed files
-        uses: tj-actions/verify-changed-files@v20
-        if: github.actor != 'dependabot[bot]'
-        id: changed_files
-        with:
-          files: |
-            src
-            dist
+      # - name: Verify Changed files
+      #   uses: tj-actions/verify-changed-files@v20
+      #   if: github.actor != 'dependabot[bot]'
+      #   id: changed_files
+      #   with:
+      #     files: |
+      #       src
+      #       dist
 
       - name: Commit files
         if: steps.changed_files.outputs.files_changed == 'true' && github.event_name == 'pull_request'
@@ -2161,9 +2161,9 @@ jobs:
           fi
         shell:
           bash
-      - name: Get branch name
-        id: branch-name
-        uses: tj-actions/branch-names@v8
+      # - name: Get branch name
+      #   id: branch-name
+      #   uses: tj-actions/branch-names@v8
         if: github.event_name == 'pull_request' && matrix.fetch-depth == 0
       - uses: nrwl/nx-set-shas@v4
         id: last_successful_commit
