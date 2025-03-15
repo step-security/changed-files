@@ -670,8 +670,8 @@ jobs:
         id: changed-files
         uses: ./
         with:
-          base_sha: "85bd869"
-          sha: "adde7bb"
+          base_sha: "8a84581d35bd44e7fbfe499e1d2e0235cd0607c3"
+          sha: "8ea88c5b76e27453b7d5b7a16ae06fb00490afc8"
           fetch_depth: 60000
 
       - name: Verify added files
@@ -690,8 +690,8 @@ jobs:
         id: changed-files-exclude-submodule
         uses: ./
         with:
-          base_sha: "85bd869"
-          sha: "adde7bb"
+          base_sha: "8a84581d35bd44e7fbfe499e1d2e0235cd0607c3"
+          sha: "8ea88c5b76e27453b7d5b7a16ae06fb00490afc8"
           fetch_depth: 60000
           exclude_submodules: true
 
@@ -967,8 +967,8 @@ jobs:
         id: changed-files-recover-deleted-files-within-submodule
         uses: ./
         with:
-          base_sha: "99b016ac470be10c92e4d92741f4c6a22f062d41"
-          sha: "11a7e7b727c1e155944175ea33f196c3a32cc45f"
+          base_sha: "8a84581d35bd44e7fbfe499e1d2e0235cd0607c3"
+          sha: "8ea88c5b76e27453b7d5b7a16ae06fb00490afc8"
           recover_deleted_files: true
           fetch_depth: 60000
 
