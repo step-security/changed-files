@@ -690,8 +690,8 @@ jobs:
         id: changed-files-exclude-submodule
         uses: ./
         with:
-          base_sha: "8a84581d35bd44e7fbfe499e1d2e0235cd0607c3"
-          sha: "8ea88c5b76e27453b7d5b7a16ae06fb00490afc8"
+          base_sha: "b2077edc26cc54d4ae0c47e867cfb52219a79d33"
+          sha: "5e9fefdd10217eb3263abe4c05cc7e77fd4ae3f9"
           fetch_depth: 60000
           exclude_submodules: true
 
@@ -1012,8 +1012,8 @@ jobs:
         id: changed-files-dir-names-deleted-files-include-only-deleted-dirs-single-file
         uses: ./
         with:
-          base_sha: 4334499669d402f0860799e2838f7bed22154ae4
-          sha: fcaaabc5f75806f85892a178b3379ec085cdf67f
+          base_sha: 300c159a143bdea13ccdf16b54a64c3ecc79ae43
+          sha: 0a2fa35eefd5b7a68f5b56d1c0aa4996e02c3d0b
           dir_names: true
           dir_names_deleted_files_include_only_deleted_dirs: true
       - name: Show output
@@ -1263,7 +1263,7 @@ jobs:
         id: changed-files-dir-names-max-depth
         uses: ./
         with:
-          base_sha: 4334499669d402f0860799e2838f7bed22154ae4
+          base_sha: 300c159a143bdea13ccdf16b54a64c3ecc79ae43
           sha: 40c21f412c57e41b60d76d58f8181ae637e12a37
           fetch_depth: 60000
           dir_names: "true"
