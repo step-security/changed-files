@@ -670,8 +670,8 @@ jobs:
         id: changed-files
         uses: ./
         with:
-          base_sha: "8a84581d35bd44e7fbfe499e1d2e0235cd0607c3"
-          sha: "b53d842f352b23b944f97bb6c57d6da88107a41c"
+          base_sha: "d7de99baa14ebf4ef2ed37f30a5ea4ceec1034f2"
+          sha: "f881a19edb9f6f14cedc11b36d9e9305fa4bc390"
           fetch_depth: 60000
 
       - name: Verify added files
@@ -2161,9 +2161,9 @@ jobs:
           fi
         shell:
           bash
-      # - name: Get branch name
-      #   id: branch-name
-      #   uses: tj-actions/branch-names@v8
+      - name: Get branch name
+        id: branch-name
+        uses: tj-actions/branch-names@v8
         if: github.event_name == 'pull_request' && matrix.fetch-depth == 0
       - uses: nrwl/nx-set-shas@v4
         id: last_successful_commit
