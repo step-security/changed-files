@@ -671,7 +671,7 @@ jobs:
         uses: ./
         with:
           base_sha: "8a84581d35bd44e7fbfe499e1d2e0235cd0607c3"
-          sha: "8ea88c5b76e27453b7d5b7a16ae06fb00490afc8"
+          sha: "b53d842f352b23b944f97bb6c57d6da88107a41c"
           fetch_depth: 60000
 
       - name: Verify added files
