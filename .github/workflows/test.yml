@@ -271,8 +271,8 @@ jobs:
         continue-on-error: true
         uses: ./
         with:
-          base_sha: d1c0ee4
-          sha: d1c0ee4
+          base_sha: 8bd3ed11d2b3acde5f41d93aad4c550e1471ab58
+          sha: 8bd3ed11d2b3acde5f41d93aad4c550e1471ab58
 
       - name: Exit with 1 if no error is raised
         if: steps.changed-files.outcome != 'failure'
@@ -1314,8 +1314,8 @@ jobs:
         id: changed-files-dir-names
         uses: ./
         with:
-          base_sha: d1c0ee4
-          sha: 4d04215
+          base_sha: 8bd3ed11d2b3acde5f41d93aad4c550e1471ab58
+          sha: dec34cbcd4b8f50d46cdb8e170687eb434f97858
           fetch_depth: 60000
           dir_names: "true"
       - name: Show output
@@ -1334,8 +1334,8 @@ jobs:
         id: changed-files-dir-names-specific
         uses: ./
         with:
-          base_sha: d1c0ee4
-          sha: 4d04215
+          base_sha: 8bd3ed11d2b3acde5f41d93aad4c550e1471ab58
+          sha: dec34cbcd4b8f50d46cdb8e170687eb434f97858
           fetch_depth: 60000
           dir_names: true
           files: test/**
@@ -1355,8 +1355,8 @@ jobs:
         id: changed-files-dir-names-specific-include-files
         uses: ./
         with:
-          base_sha: d1c0ee4
-          sha: 4d04215
+          base_sha: 8bd3ed11d2b3acde5f41d93aad4c550e1471ab58
+          sha: dec34cbcd4b8f50d46cdb8e170687eb434f97858
           fetch_depth: 60000
           dir_names: true
           dir_names_include_files: test/*.txt
@@ -1395,8 +1395,8 @@ jobs:
         id: changed-files-dir-names-specific-unmatched-path
         uses: ./
         with:
-          base_sha: d1c0ee4
-          sha: 4d04215
+          base_sha: 8bd3ed11d2b3acde5f41d93aad4c550e1471ab58
+          sha: dec34cbcd4b8f50d46cdb8e170687eb434f97858
           fetch_depth: 60000
           dir_names: true
           files: unknown/**
@@ -1506,8 +1506,8 @@ jobs:
         id: changed-files-all-old-new-renamed-files-1
         uses: ./
         with:
-          base_sha: d1c0ee4
-          sha: 4d04215
+          base_sha: 8bd3ed11d2b3acde5f41d93aad4c550e1471ab58
+          sha: dec34cbcd4b8f50d46cdb8e170687eb434f97858
           fetch_depth: 60000
           include_all_old_new_renamed_files: true
       - name: Show output
