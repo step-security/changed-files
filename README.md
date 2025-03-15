@@ -1,27 +1,6 @@
-[![Ubuntu](https://img.shields.io/badge/Ubuntu-E95420?style=for-the-badge\&logo=ubuntu\&logoColor=white)](https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#jobsjob_idruns-on)
-[![Mac OS](https://img.shields.io/badge/mac%20os-000000?style=for-the-badge\&logo=macos\&logoColor=F0F0F0)](https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#jobsjob_idruns-on)
-[![Windows](https://img.shields.io/badge/Windows-0078D6?style=for-the-badge\&logo=windows\&logoColor=white)](https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#jobsjob_idruns-on)
-[![Public workflows that use this action.](https://img.shields.io/endpoint?style=for-the-badge\&url=https%3A%2F%2Fused-by.vercel.app%2Fapi%2Fgithub-actions%2Fused-by%3Faction%3Dstep-security%2Fchanged-files%26package_id%3DUGFja2FnZS0yOTQyNTU4MDk5%26badge%3Dtrue)](https://github.com/search?o=desc\&q=step-security+changed-files+language%3AYAML\&s=\&type=Code)
-
-[![Codacy Badge](https://app.codacy.com/project/badge/Grade/4fe2f49c3ab144b0bbe4effc85a061a0)](https://app.codacy.com/gh/step-security/changed-files/dashboard?utm_source=gh\&utm_medium=referral\&utm_content=\&utm_campaign=Badge_grade)
-[![CI](https://github.com/step-security/changed-files/actions/workflows/test.yml/badge.svg)](https://github.com/step-security/changed-files/actions/workflows/test.yml)
-[![Update release version.](https://github.com/step-security/changed-files/actions/workflows/sync-release-version.yml/badge.svg)](https://github.com/step-security/changed-files/actions/workflows/sync-release-version.yml)
-
-<!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-
-[![All Contributors](https://img.shields.io/badge/all_contributors-27-orange.svg?style=flat-square)](#contributors-)
-
-<!-- ALL-CONTRIBUTORS-BADGE:END -->
-
 ## changed-files
 
 Effortlessly track all changed files and directories relative to a target branch, the current branch (preceding commit or the last remote commit), multiple branches, or custom commits returning **relative paths** from the project root using this GitHub action.
-
-> \[!NOTE]
->
-> *   This action solely identifies files that have changed for events such as [`pull_request*`, `push`, `merge_group`, `release`, and many more](#other-supported-events-electron). However, it doesn't detect pending uncommitted changes created during the workflow execution.
->
->     See: https://github.com/step-security/verify-changed-files instead.
 
 ## Table of contents
 
@@ -306,15 +285,7 @@ jobs:
 
 To access more examples, navigate to the [Examples](#examples-) section.
 
-If you feel generous and want to show some extra appreciation:
 
-Support this project with a :star:
-
-[![Buy me a coffee][buymeacoffee-shield]][buymeacoffee]
-
-[buymeacoffee]: https://www.buymeacoffee.com/jackton1
-
-[buymeacoffee-shield]: https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png
 
 > \[!IMPORTANT]
 >
@@ -1319,14 +1290,3 @@ See [inputs](#inputs) for more information.
 </details>
 
 *   Free software: [MIT license](LICENSE)
-
-## Credits 👏
-
-This package was created with [cookiecutter-action](https://github.com/tj-actions/cookiecutter-action).
-
-*   [tj-actions/auto-doc](https://github.com/tj-actions//auto-doc)
-*   [tj-actions/verify-changed-files](https://github.com/tj-actions/verify-changed-files)
-*   [tj-actions/demo](https://github.com/tj-actions/demo)
-*   [tj-actions/demo2](https://github.com/tj-actions/demo2)
-*   [tj-actions/demo3](https://github.com/tj-actions/demo3)
-*   [tj-actions/release-tagger](https://github.com/step-security/release-tagger)
