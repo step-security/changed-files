@@ -1547,8 +1547,8 @@ jobs:
         id: changed-files-all-old-new-renamed-files-2
         uses: ./
         with:
-          base_sha: afaab459d278edbbd76dd7b177fc551fbb736afa
-          sha: eac83ef33824f8de8af147c9c19fc48e4ca8c4b7
+          base_sha: 0b672de6729a504a1b45359ac4bb4c839f2507ab
+          sha: 47c98bbbf77307ee89ba7c860fcb38fadfdc4d38
           fetch_depth: 60000
           include_all_old_new_renamed_files: true
       - name: Show output
@@ -1588,8 +1588,8 @@ jobs:
         id: changed-files-all-old-new-renamed-files-2-output-as-deleted-and-added
         uses: ./
         with:
-          base_sha: afaab459d278edbbd76dd7b177fc551fbb736afa
-          sha: eac83ef33824f8de8af147c9c19fc48e4ca8c4b7
+          base_sha: 0b672de6729a504a1b45359ac4bb4c839f2507ab
+          sha: 47c98bbbf77307ee89ba7c860fcb38fadfdc4d38
           fetch_depth: 60000
           include_all_old_new_renamed_files: true
           output_renamed_files_as_deleted_and_added: true
