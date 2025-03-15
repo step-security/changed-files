@@ -1,4 +1,8 @@
-## changed-files
+# StepSecurity Maintained changed-files Action
+
+[StepSecurity Maintained Actions](https://docs.stepsecurity.io/actions/stepsecurity-actions) are usually exclusive to StepSecurity enterprise customers. However, in an effort to help the community with [the tj-actions/changed-files security incident](https://www.stepsecurity.io/blog/harden-runner-detection-tj-actions-changed-files-action-is-compromised), we are making this StepSecurity Maintained Action **freely available to everyone**.
+
+## Overview
 
 Effortlessly track all changed files and directories relative to a target branch, the current branch (preceding commit or the last remote commit), multiple branches, or custom commits returning **relative paths** from the project root using this GitHub action.
 
