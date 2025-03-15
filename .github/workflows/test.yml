@@ -831,8 +831,8 @@ jobs:
         id: changed-files-recover-deleted-files
         uses: ./
         with:
-          base_sha: "dfc3d0217259312556857c8a17697025c032dd63"
-          sha: "bff274d131e9c67bbdb445e1655ba2a4d9e196e9"
+          base_sha: "234fe244e739748a774663f491eb1146f7595d84"
+          sha: "d925c31ed178ed99dbe21aea42b50035b6c07f8b"
           recover_deleted_files: true
           fetch_depth: 60000
 
@@ -862,8 +862,8 @@ jobs:
         id: changed-files-recover-deleted-files-with-files
         uses: ./
         with:
-          base_sha: "dfc3d0217259312556857c8a17697025c032dd63"
-          sha: "bff274d131e9c67bbdb445e1655ba2a4d9e196e9"
+          base_sha: "234fe244e739748a774663f491eb1146f7595d84"
+          sha: "d925c31ed178ed99dbe21aea42b50035b6c07f8b"
           files: |
             test/**
           recover_deleted_files: true
@@ -895,8 +895,8 @@ jobs:
         id: changed-files-recover-deleted-files-with-files-yaml
         uses: ./
         with:
-          base_sha: "dfc3d0217259312556857c8a17697025c032dd63"
-          sha: "bff274d131e9c67bbdb445e1655ba2a4d9e196e9"
+          base_sha: "234fe244e739748a774663f491eb1146f7595d84"
+          sha: "d925c31ed178ed99dbe21aea42b50035b6c07f8b"
           files_yaml: |
             test:
               - test/**.txt
