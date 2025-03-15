@@ -1004,7 +1004,7 @@ jobs:
       - name: Checkout branch
         uses: actions/checkout@v4
         with:
-          ref: 009ff3ba221358684a3586d10a225f804446288a
+          ref: 2c65f7da2a8dc85c1b5225d02d7088a3825a29c3
           repository: ${{ github.event.pull_request.head.repo.full_name }}
           submodules: true
           fetch-depth: 2
@@ -1050,8 +1050,8 @@ jobs:
         id: changed-files-dir-names-deleted-files-include-only-deleted-dirs-directory
         uses: ./
         with:
-          base_sha: 009ff3ba221358684a3586d10a225f804446288a
-          sha: 6143d0fb5c4821aa75c07aacd04343f62deac91a
+          base_sha: 2c65f7da2a8dc85c1b5225d02d7088a3825a29c3
+          sha: f1c955af75e727e9ca8974290eddbb0b380d3b2b
           dir_names: true
           dir_names_deleted_files_include_only_deleted_dirs: true
           fetch_depth: 60000
@@ -1078,8 +1078,8 @@ jobs:
         id: changed-files-dir-names-deleted-files-include-only-deleted-dirs-directory-posix-path-separator
         uses: ./
         with:
-          base_sha: 009ff3ba221358684a3586d10a225f804446288a
-          sha: 6143d0fb5c4821aa75c07aacd04343f62deac91a
+          base_sha: 2c65f7da2a8dc85c1b5225d02d7088a3825a29c3
+          sha: f1c955af75e727e9ca8974290eddbb0b380d3b2b
           dir_names: true
           dir_names_deleted_files_include_only_deleted_dirs: true
           use_posix_path_separator: true
