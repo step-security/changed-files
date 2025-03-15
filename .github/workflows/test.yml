@@ -1050,8 +1050,8 @@ jobs:
         id: changed-files-dir-names-deleted-files-include-only-deleted-dirs-directory
         uses: ./
         with:
-          base_sha: 36e1ab2baa954b6fcfb98b667398390180cbac70
-          sha: 6a9948db9bf5b133bfd27e271666c6d0e8fb7af9
+          base_sha: 6f8d5b3bd457f3cbfc214e44e09b71d25677fed0
+          sha: e5c76c4c33cda45eb21a487153d6377dd77e334d
           dir_names: true
           dir_names_deleted_files_include_only_deleted_dirs: true
           fetch_depth: 60000
