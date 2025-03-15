@@ -31,7 +31,7 @@
   "bugs": {
     "url": "https://github.com/step-security/changed-files/issues"
   },
-  "homepage": "https://github.com/tj-actions/changed-files#readme",
+  "homepage": "https://github.com/step-security/changed-files#readme",
   "dependencies": {
     "@actions/core": "^1.10.0",
     "@actions/exec": "^1.1.1",

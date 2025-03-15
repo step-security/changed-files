@@ -1205,7 +1205,7 @@ See [inputs](#inputs) for more information.
 ...
       - name: Get branch name
         id: branch-name
-        uses: step-security/branch-names@v6
+        uses: tj-actions/branch-names@v6
 
       - uses: nrwl/nx-set-shas@v3
         id: last_successful_commit_push
@@ -1232,7 +1232,7 @@ See [inputs](#inputs) for more information.
 ...
       - name: Get branch name
         id: branch-name
-        uses: step-security/branch-names@v5
+        uses: tj-actions/branch-names@v5
 
       - uses: nrwl/nx-set-shas@v3
         id: last_successful_commit_pull_request
@@ -1318,142 +1318,15 @@ See [inputs](#inputs) for more information.
 
 </details>
 
-## Real-world usage 🌐
-
-### Open source projects 📦
-
-*   [vitejs/vite: uses step-security/changed-files to automate testing](https://github.com/vitejs/vite/blob/8da04227d6f818a8ad9efc0056101968037c2e36/.github/workflows/ci.yml#L61)
-
-*   [qgis/QGIS: uses step-security/changed-files to automate spell checking](https://github.com/qgis/QGIS/blob/a5333497e90ac9de4ca70463d8e0b64c3f294d63/.github/workflows/code_layout.yml#L147)
-
-*   [coder/code-server: uses step-security/changed-files to automate detecting changes and run steps based on the outcome](https://github.com/coder/code-server/blob/c32a31d802f679846876b8ad9aacff6cf7b5361d/.github/workflows/build.yaml#L48)
-
-*   [tldr-pages/tldr: uses step-security/changed-files to automate detecting spelling errors](https://github.com/tldr-pages/tldr/blob/c1b714c55cb0048037b79a681a10d7f3ddb0164c/.github/workflows/codespell.yml#L18-L26)
-
-*   [nodejs/docker-node: uses step-security/changed-files to generate matrix jobs based on changes detected](https://github.com/nodejs/docker-node/blob/3c4fa6daf06a4786d202f2f610351837806a0380/.github/workflows/build-test.yml#L29)
-
-*   [refined-github: uses step-security/changed-files to automate test URL validation in added/edited files](https://github.com/refined-github/refined-github/blob/b754bfe58904da8a599d7876fdaaf18302785629/.github/workflows/features.yml#L35)
-
-*   [aws-doc-sdk-examples: uses step-security/changed-files to automate testing](https://github.com/awsdocs/aws-doc-sdk-examples/blob/2393723ef6b0cad9502f4852f5c72f7be58ca89d/.github/workflows/javascript.yml#L22)
-
-*   [nhost: uses step-security/changed-files to automate testing based on changes detected](https://github.com/nhost/nhost/blob/71a8ce444618a8ac4d660518172fba4883c4014b/.github/workflows/ci.yaml#L44-L48)
-
-*   [qmk\_firmware uses step-security/changed-files to run linters](https://github.com/qmk/qmk_firmware/blob/7a737235ffd49c32d2c5561e8fe53fd96baa7f96/.github/workflows/lint.yml#L30)
-
-*   [argo-cd uses step-security/changed-files to detect changed frontend or backend files](https://github.com/argoproj/argo-cd/blob/5bc1850aa1d26301043be9f2fb825d88c80c111c/.github/workflows/ci-build.yaml#L33)
-
-*   [argo-workflows uses step-security/changed-files to run specific jobs based on changes detected](https://github.com/argoproj/argo-workflows/blob/baef4856ff2603c76dbe277c825eaa3f9788fc91/.github/workflows/ci-build.yaml#L34)
-
-And many more...
-
-### Scalability Example 📈
-
-![image](https://github.com/step-security/changed-files/assets/17484350/23767413-4c51-42fb-ab1c-39ef72c44904)
-
-## Important Notice ⚠️
-
-> \[!IMPORTANT]
->
-> *   Spaces in file names can introduce bugs when using bash loops. See: [#216](https://github.com/step-security/changed-files/issues/216)
->     However, this action will handle spaces in file names, with a recommendation of using a separator to prevent any hidden issues.
->
->     ![Screen Shot 2021-10-23 at 9 37 34 AM](https://user-images.githubusercontent.com/17484350/138558767-b13c90bf-a1ae-4e86-9520-70a6a4624f41.png)
-
-## Migration guide 🔄
-
-With the switch from using grep's Extended regex to match files to the natively supported workflow glob pattern matching syntax introduced in [v13](https://github.com/step-security/changed-files/releases/tag/v13) you'll need to modify patterns used to match `files`.
-
-```diff
-...
-      - name: Get specific changed files
-        id: changed-files-specific
-        uses: step-security/changed-files@v24
-        with:
-          files: |
--            \.sh$
--            .(sql|py)$
--            ^(dir1|dir2)
-+            **/*.{sh,sql,py}
-+            {dir1,dir2}/**
-```
-
 *   Free software: [MIT license](LICENSE)
 
 ## Credits 👏
 
-This package was created with [cookiecutter-action](https://github.com/step-security/cookiecutter-action).
+This package was created with [cookiecutter-action](https://github.com/tj-actions/cookiecutter-action).
 
-*   [step-security/auto-doc](https://github.com/step-security/auto-doc)
-*   [step-security/verify-changed-files](https://github.com/step-security/verify-changed-files)
-*   [step-security/demo](https://github.com/step-security/demo)
-*   [step-security/demo2](https://github.com/step-security/demo2)
-*   [step-security/demo3](https://github.com/step-security/demo3)
-*   [step-security/release-tagger](https://github.com/step-security/release-tagger)
-
-## Report Bugs 🐛
-
-Report bugs at https://github.com/step-security/changed-files/issues.
-
-If you are reporting a bug, please include:
-
-*   Your operating system name and version.
-*   All essential details about your workflow that might be helpful in troubleshooting. (**NOTE**: Ensure that you include full log outputs with debugging enabled)
-*   Detailed steps to reproduce the bug.
-
-## Contributors ✨
-
-Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/docs/en/emoji-key)):
-
-<!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
-
-<!-- prettier-ignore-start -->
-
-<!-- markdownlint-disable -->
-
-<table>
-  <tbody>
-    <tr>
-      <td align="center" valign="top" width="14.28%"><a href="https://github.com/jsoref"><img src="https://avatars.githubusercontent.com/u/2119212?v=4?s=100" width="100px;" alt="Josh Soref"/><br /><sub><b>Josh Soref</b></sub></a><br /><a href="https://github.com/step-security/changed-files/commits?author=jsoref" title="Documentation">📖</a></td>
-      <td align="center" valign="top" width="14.28%"><a href="https://github.com/monoxgas"><img src="https://avatars.githubusercontent.com/u/1223016?v=4?s=100" width="100px;" alt="Nick Landers"/><br /><sub><b>Nick Landers</b></sub></a><br /><a href="https://github.com/step-security/changed-files/commits?author=monoxgas" title="Code">💻</a></td>
-      <td align="center" valign="top" width="14.28%"><a href="https://github.com/Kras4ooo"><img src="https://avatars.githubusercontent.com/u/1948054?v=4?s=100" width="100px;" alt="Krasimir Nikolov"/><br /><sub><b>Krasimir Nikolov</b></sub></a><br /><a href="https://github.com/step-security/changed-files/commits?author=Kras4ooo" title="Code">💻</a> <a href="https://github.com/step-security/changed-files/commits?author=Kras4ooo" title="Documentation">📖</a></td>
-      <td align="center" valign="top" width="14.28%"><a href="https://github.com/IvanPizhenko"><img src="https://avatars.githubusercontent.com/u/11859904?v=4?s=100" width="100px;" alt="Ivan Pizhenko"/><br /><sub><b>Ivan Pizhenko</b></sub></a><br /><a href="https://github.com/step-security/changed-files/commits?author=IvanPizhenko" title="Code">💻</a> <a href="https://github.com/step-security/changed-files/commits?author=IvanPizhenko" title="Documentation">📖</a></td>
-      <td align="center" valign="top" width="14.28%"><a href="https://github.com/talva-tr"><img src="https://avatars.githubusercontent.com/u/82046981?v=4?s=100" width="100px;" alt="talva-tr"/><br /><sub><b>talva-tr</b></sub></a><br /><a href="https://github.com/step-security/changed-files/commits?author=talva-tr" title="Code">💻</a></td>
-      <td align="center" valign="top" width="14.28%"><a href="https://bandism.net/"><img src="https://avatars.githubusercontent.com/u/22633385?v=4?s=100" width="100px;" alt="Ikko Ashimine"/><br /><sub><b>Ikko Ashimine</b></sub></a><br /><a href="https://github.com/step-security/changed-files/commits?author=eltociear" title="Documentation">📖</a></td>
-      <td align="center" valign="top" width="14.28%"><a href="https://github.com/Zamiell"><img src="https://avatars.githubusercontent.com/u/5511220?v=4?s=100" width="100px;" alt="James"/><br /><sub><b>James</b></sub></a><br /><a href="https://github.com/step-security/changed-files/commits?author=Zamiell" title="Documentation">📖</a></td>
-    </tr>
-    <tr>
-      <td align="center" valign="top" width="14.28%"><a href="https://github.com/wushujames"><img src="https://avatars.githubusercontent.com/u/677529?v=4?s=100" width="100px;" alt="James Cheng"/><br /><sub><b>James Cheng</b></sub></a><br /><a href="https://github.com/step-security/changed-files/commits?author=wushujames" title="Documentation">📖</a></td>
-      <td align="center" valign="top" width="14.28%"><a href="https://qiita.com/SUZUKI_Masaya"><img src="https://avatars.githubusercontent.com/u/15100604?v=4?s=100" width="100px;" alt="Masaya Suzuki"/><br /><sub><b>Masaya Suzuki</b></sub></a><br /><a href="https://github.com/step-security/changed-files/commits?author=massongit" title="Code">💻</a></td>
-      <td align="center" valign="top" width="14.28%"><a href="https://fagai.net"><img src="https://avatars.githubusercontent.com/u/1772112?v=4?s=100" width="100px;" alt="fagai"/><br /><sub><b>fagai</b></sub></a><br /><a href="https://github.com/step-security/changed-files/commits?author=fagai" title="Documentation">📖</a></td>
-      <td align="center" valign="top" width="14.28%"><a href="https://github.com/pkit"><img src="https://avatars.githubusercontent.com/u/805654?v=4?s=100" width="100px;" alt="Constantine Peresypkin"/><br /><sub><b>Constantine Peresypkin</b></sub></a><br /><a href="https://github.com/step-security/changed-files/commits?author=pkit" title="Code">💻</a></td>
-      <td align="center" valign="top" width="14.28%"><a href="https://github.com/deronnax"><img src="https://avatars.githubusercontent.com/u/439279?v=4?s=100" width="100px;" alt="Mathieu Dupuy"/><br /><sub><b>Mathieu Dupuy</b></sub></a><br /><a href="https://github.com/step-security/changed-files/commits?author=deronnax" title="Documentation">📖</a></td>
-      <td align="center" valign="top" width="14.28%"><a href="https://github.com/JoeOvo"><img src="https://avatars.githubusercontent.com/u/100686542?v=4?s=100" width="100px;" alt="Joe Moggridge"/><br /><sub><b>Joe Moggridge</b></sub></a><br /><a href="https://github.com/step-security/changed-files/commits?author=JoeOvo" title="Documentation">📖</a></td>
-      <td align="center" valign="top" width="14.28%"><a href="https://www.credly.com/users/thyarles/badges"><img src="https://avatars.githubusercontent.com/u/1340046?v=4?s=100" width="100px;" alt="Charles Santos"/><br /><sub><b>Charles Santos</b></sub></a><br /><a href="https://github.com/step-security/changed-files/commits?author=thyarles" title="Code">💻</a></td>
-    </tr>
-    <tr>
-      <td align="center" valign="top" width="14.28%"><a href="https://github.com/kostiantyn-korniienko-aurea"><img src="https://avatars.githubusercontent.com/u/37180625?v=4?s=100" width="100px;" alt="Kostiantyn Korniienko"/><br /><sub><b>Kostiantyn Korniienko</b></sub></a><br /><a href="https://github.com/step-security/changed-files/commits?author=kostiantyn-korniienko-aurea" title="Documentation">📖</a></td>
-      <td align="center" valign="top" width="14.28%"><a href="https://github.com/lpulley"><img src="https://avatars.githubusercontent.com/u/7193187?v=4?s=100" width="100px;" alt="Logan Pulley"/><br /><sub><b>Logan Pulley</b></sub></a><br /><a href="https://github.com/step-security/changed-files/commits?author=lpulley" title="Code">💻</a></td>
-      <td align="center" valign="top" width="14.28%"><a href="https://www.linkedin.com/in/kenji-miyake/"><img src="https://avatars.githubusercontent.com/u/31987104?v=4?s=100" width="100px;" alt="Kenji Miyake"/><br /><sub><b>Kenji Miyake</b></sub></a><br /><a href="https://github.com/step-security/changed-files/commits?author=kenji-miyake" title="Code">💻</a></td>
-      <td align="center" valign="top" width="14.28%"><a href="https://github.com/adonisgarciac"><img src="https://avatars.githubusercontent.com/u/71078987?v=4?s=100" width="100px;" alt="adonisgarciac"/><br /><sub><b>adonisgarciac</b></sub></a><br /><a href="https://github.com/step-security/changed-files/commits?author=adonisgarciac" title="Code">💻</a> <a href="https://github.com/step-security/changed-files/commits?author=adonisgarciac" title="Documentation">📖</a></td>
-      <td align="center" valign="top" width="14.28%"><a href="https://github.com/cfernhout"><img src="https://avatars.githubusercontent.com/u/22294606?v=4?s=100" width="100px;" alt="Chiel Fernhout"/><br /><sub><b>Chiel Fernhout</b></sub></a><br /><a href="https://github.com/step-security/changed-files/commits?author=cfernhout" title="Documentation">📖</a></td>
-      <td align="center" valign="top" width="14.28%"><a href="https://github.com/albertoperdomo2"><img src="https://avatars.githubusercontent.com/u/62241095?v=4?s=100" width="100px;" alt="Alberto Perdomo"/><br /><sub><b>Alberto Perdomo</b></sub></a><br /><a href="https://github.com/step-security/changed-files/commits?author=albertoperdomo2" title="Documentation">📖</a></td>
-      <td align="center" valign="top" width="14.28%"><a href="https://arthurvolant.com"><img src="https://avatars.githubusercontent.com/u/37664438?v=4?s=100" width="100px;" alt="Arthur"/><br /><sub><b>Arthur</b></sub></a><br /><a href="https://github.com/step-security/changed-files/issues?q=author%3AV0lantis" title="Bug reports">🐛</a> <a href="https://github.com/step-security/changed-files/commits?author=V0lantis" title="Code">💻</a></td>
-    </tr>
-    <tr>
-      <td align="center" valign="top" width="14.28%"><a href="https://github.com/rodrigorfk"><img src="https://avatars.githubusercontent.com/u/1995033?v=4?s=100" width="100px;" alt="Rodrigo Fior Kuntzer"/><br /><sub><b>Rodrigo Fior Kuntzer</b></sub></a><br /><a href="https://github.com/step-security/changed-files/commits?author=rodrigorfk" title="Code">💻</a> <a href="https://github.com/step-security/changed-files/commits?author=rodrigorfk" title="Tests">⚠️</a> <a href="https://github.com/step-security/changed-files/issues?q=author%3Arodrigorfk" title="Bug reports">🐛</a></td>
-      <td align="center" valign="top" width="14.28%"><a href="https://github.com/levenleven"><img src="https://avatars.githubusercontent.com/u/6463364?v=4?s=100" width="100px;" alt="Aleksey Levenstein"/><br /><sub><b>Aleksey Levenstein</b></sub></a><br /><a href="https://github.com/step-security/changed-files/commits?author=levenleven" title="Documentation">📖</a></td>
-      <td align="center" valign="top" width="14.28%"><a href="https://github.com/dan-hill2802"><img src="https://avatars.githubusercontent.com/u/5046322?v=4?s=100" width="100px;" alt="Daniel Hill"/><br /><sub><b>Daniel Hill</b></sub></a><br /><a href="https://github.com/step-security/changed-files/commits?author=dan-hill2802" title="Documentation">📖</a></td>
-      <td align="center" valign="top" width="14.28%"><a href="https://keisukeyamashita.com"><img src="https://avatars.githubusercontent.com/u/23056537?v=4?s=100" width="100px;" alt="KeisukeYamashita"/><br /><sub><b>KeisukeYamashita</b></sub></a><br /><a href="https://github.com/step-security/changed-files/commits?author=KeisukeYamashita" title="Documentation">📖</a></td>
-      <td align="center" valign="top" width="14.28%"><a href="https://github.com/codesculpture"><img src="https://avatars.githubusercontent.com/u/63452117?v=4?s=100" width="100px;" alt="Aravind"/><br /><sub><b>Aravind</b></sub></a><br /><a href="https://github.com/step-security/changed-files/commits?author=codesculpture" title="Code">💻</a> <a href="https://github.com/step-security/changed-files/issues?q=author%3Acodesculpture" title="Bug reports">🐛</a></td>
-      <td align="center" valign="top" width="14.28%"><a href="https://lukaspfahler.de"><img src="https://avatars.githubusercontent.com/u/2308119?v=4?s=100" width="100px;" alt="Lukas Pfahler"/><br /><sub><b>Lukas Pfahler</b></sub></a><br /><a href="https://github.com/step-security/changed-files/commits?author=Whadup" title="Code">💻</a></td>
-    </tr>
-  </tbody>
-</table>
-
-<!-- markdownlint-restore -->
-
-<!-- prettier-ignore-end -->
-
-<!-- ALL-CONTRIBUTORS-LIST:END -->
-
-This project follows the [all-contributors](https://github.com/all-contributors/all-contributors) specification. Contributions of any kind welcome!
+*   [tj-actions/auto-doc](https://github.com/tj-actions//auto-doc)
+*   [tj-actions/verify-changed-files](https://github.com/tj-actions/verify-changed-files)
+*   [tj-actions/demo](https://github.com/tj-actions/demo)
+*   [tj-actions/demo2](https://github.com/tj-actions/demo2)
+*   [tj-actions/demo3](https://github.com/tj-actions/demo3)
+*   [tj-actions/release-tagger](https://github.com/step-security/release-tagger)
