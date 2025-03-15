@@ -1292,8 +1292,8 @@ jobs:
         id: changed-files-dir-names-exclude-root
         uses: ./
         with:
-          base_sha: dddfbd69
-          sha: ce8c1983
+          base_sha: 8ca06941a2bd9e3efb15e15776c7cafe14acbe5c
+          sha: 8aeac6a91b9660807124bf90ac43dad3efb77fbc
           fetch_depth: 60000
           dir_names: "true"
           dir_names_exclude_current_dir: "true"
