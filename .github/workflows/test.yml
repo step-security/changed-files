@@ -1004,7 +1004,7 @@ jobs:
       - name: Checkout branch
         uses: actions/checkout@v4
         with:
-          ref: a52f8621d26d5d9f54b80f74bda2d9eedff94693
+          ref: 009ff3ba221358684a3586d10a225f804446288a
           repository: ${{ github.event.pull_request.head.repo.full_name }}
           submodules: true
           fetch-depth: 2
@@ -1078,8 +1078,8 @@ jobs:
         id: changed-files-dir-names-deleted-files-include-only-deleted-dirs-directory-posix-path-separator
         uses: ./
         with:
-          base_sha: a52f8621d26d5d9f54b80f74bda2d9eedff94693
-          sha: cd1e384723e4d1a184568182ac2b27c53ebf017f
+          base_sha: 009ff3ba221358684a3586d10a225f804446288a
+          sha: 6143d0fb5c4821aa75c07aacd04343f62deac91a
           dir_names: true
           dir_names_deleted_files_include_only_deleted_dirs: true
           use_posix_path_separator: true
