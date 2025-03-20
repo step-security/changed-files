@@ -297,11 +297,17 @@ export const gitFetch = async ({
   args: string[]
   cwd: string
 }): Promise<number> => {
-  const {exitCode} = await exec.getExecOutput('git', ['fetch', '-q', ...args], {
-    cwd,
-    ignoreReturnCode: true,
-    silent: !core.isDebug()
-  })
+  // Sanitize args to prevent injection of dangerous options
+  const sanitizedArgs = args.filter(arg => !arg.startsWith('--upload-pack'))
+  const {exitCode} = await exec.getExecOutput(
+    'git',
+    ['fetch', '-q', ...sanitizedArgs],
+    {
+      cwd,
+      ignoreReturnCode: true,
+      silent: !core.isDebug()
+    }
+  )
 
   return exitCode
 }
