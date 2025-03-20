@@ -1,0 +1,401 @@
+name: Dependency Audit Fix and PR
+
+on:
+  workflow_call:
+    inputs:
+      package_manager:
+        description: "Specify package manager (npm or yarn)"
+        required: false
+        type: string
+        default: "npm"
+      force:
+        description: "Use --force flag for npm audit fix?"
+        required: false
+        type: boolean
+        default: false
+      base_branch:
+        description: "Specify a base branch (default: main)"
+        required: false
+        type: string
+        default: "main"
+      use_private_packages:
+        description: "Use private packages (default: false)"
+        required: false
+        type: boolean
+      script:
+        description: "Specify the npm/yarn script to run"
+        required: false
+        type: string
+        default: "npm run build"
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+  packages: read
+
+jobs:
+  audit-fix:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@cb605e52c26070c328afc4562f0b4ada7618a84e # v2.10.4
+        with:
+          egress-policy: audit
+
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@1d0ff469b7ec7b3cb9d8673fde0c81c44821de2a # v4.2.0
+        with:
+          node-version: "20"
+          cache: ${{ inputs.package_manager }}
+
+      - name: Authenticate npm with GitHub Packages (if using private packages)
+        if: inputs.use_private_packages == true
+        run: |
+          echo "//npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}" > ~/.npmrc
+          echo "@${{ github.repository_owner }}:registry=https://npm.pkg.github.com/" >> ~/.npmrc
+
+      - name: Install dependencies
+        run: |
+          if [ "${{ inputs.package_manager }}" == "npm" ]; then
+            npm ci
+          else
+            yarn install --frozen-lockfile
+          fi
+
+      - name: Determine Branch Name
+        id: set_branch
+        run: |
+          if [ "${{ inputs.package_manager }}" == "npm" ]; then
+            if [ "${{ inputs.force }}" == "true" ]; then
+              BRANCH_NAME="npm-audit-fix-force"
+            else
+              BRANCH_NAME="npm-audit-fix"
+            fi
+          else
+            BRANCH_NAME="yarn-audit-fix"
+          fi
+          echo "BRANCH_NAME=$BRANCH_NAME" >> $GITHUB_ENV
+
+      - name: Fetch PR Number (If Open)
+        id: fetch_pr
+        run: |
+          EXISTING_PR_NUMBER=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            "https://api.github.com/repos/${{ github.repository }}/pulls?state=open" \
+            | jq -r --arg branch "${{ env.BRANCH_NAME }}" '.[] | select(.head.ref == $branch) | .number')
+
+          if [[ -n "$EXISTING_PR_NUMBER" && "$EXISTING_PR_NUMBER" != "null" ]]; then
+            echo "Existing open PR found: #$EXISTING_PR_NUMBER"
+            echo "EXISTING_PR_NUMBER=$EXISTING_PR_NUMBER" >> $GITHUB_ENV
+          else
+            echo "No open PR found."
+            echo "EXISTING_PR_NUMBER=" >> $GITHUB_ENV
+          fi
+  
+      - name: Reset & Update PR Branch Using API
+        run: |
+          echo "🔍 Checking if branch ${{ env.BRANCH_NAME }} exists..."
+
+          BRANCH_RESPONSE=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            "https://api.github.com/repos/${{ github.repository }}/git/refs/heads/${{ env.BRANCH_NAME }}")
+
+          BRANCH_EXISTS=$(echo "$BRANCH_RESPONSE" | jq -r '.ref // empty')
+
+          BASE_COMMIT_SHA=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            "https://api.github.com/repos/${{ github.repository }}/git/refs/heads/${{ inputs.base_branch }}" | jq -r '.object.sha')
+
+          if [[ -n "$BRANCH_EXISTS" ]]; then
+            echo "🔄 Branch ${{ env.BRANCH_NAME }} exists. Resetting to match ${{ inputs.base_branch }}"
+            curl -s -X PATCH -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+              -H "Accept: application/vnd.github.v3+json" \
+              -d "{\"sha\": \"$BASE_COMMIT_SHA\", \"force\": true}" \
+              "https://api.github.com/repos/${{ github.repository }}/git/refs/heads/${{ env.BRANCH_NAME }}"
+            echo "✅ Branch ${{ env.BRANCH_NAME }} reset successfully."
+          else
+            echo "🆕 Branch ${{ env.BRANCH_NAME }} does not exist. Creating from ${{ inputs.base_branch }}..."
+            curl -s -X POST -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+              -H "Accept: application/vnd.github.v3+json" \
+              -d "{\"ref\": \"refs/heads/${{ env.BRANCH_NAME }}\", \"sha\": \"$BASE_COMMIT_SHA\"}" \
+              "https://api.github.com/repos/${{ github.repository }}/git/refs"
+            echo "✅ New branch ${{ env.BRANCH_NAME }} created successfully."
+          fi
+
+      - name: Run Audit Fix
+        run: |
+          if [ "${{ inputs.package_manager }}" == "npm" ]; then
+            if [ "${{ inputs.force }}" == "true" ]; then
+              npm audit fix --force || echo "No fixes needed"
+            else
+              npm audit fix || echo "No fixes needed"
+            fi
+          else
+            npx yarn-audit-fix || echo "No fixes needed"
+          fi
+
+      - name: Run Specified Build Script
+        run: |
+          SCRIPT="${{ inputs.script }}"
+          eval "$SCRIPT" || echo "No build script found or failed, skipping."
+
+      - name: Check for Changes
+        id: check_changes
+        run: |
+          git add .
+
+          if git diff --cached --exit-code; then
+            echo "No changes detected."
+            echo "changes=false" >> $GITHUB_ENV
+          else
+            echo "changes=true" >> $GITHUB_ENV
+          fi
+
+      - name: Commit and Push Changes Using GitHub API
+        if: env.changes == 'true'
+        run: |
+          echo "Committing changes via GitHub API..."
+          FILES_CHANGED=$(git status --porcelain | awk '{print $2}')
+          for file in $FILES_CHANGED; do
+            echo "Processing file: $file"
+
+            CONTENT=$(base64 -w 0 "$file")
+
+            SHA=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+              "https://api.github.com/repos/${{ github.repository }}/contents/$file?ref=${{ env.BRANCH_NAME }}" | jq -r .sha)
+            if [ "$SHA" == "null" ]; then SHA=""; fi
+
+            # Prepare commit payload
+            JSON_PAYLOAD=$(mktemp)
+            echo "{
+              \"message\": \"fix: apply audit fixes\",
+              \"content\": \"$CONTENT\",
+              \"branch\": \"${{ env.BRANCH_NAME }}\",
+              \"sha\": \"$SHA\"
+            }" > "$JSON_PAYLOAD"
+
+            curl -s -X PUT -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+              -H "Accept: application/vnd.github.v3+json" \
+              --data-binary @"$JSON_PAYLOAD" \
+              "https://api.github.com/repos/${{ github.repository }}/contents/$file"
+
+            echo "✅ File committed: $file"
+          done
+
+          echo "✅ All changes committed successfully."
+
+      - name: Reopen PR If It Was Closed
+        if: env.changes == 'true' && env.EXISTING_PR_NUMBER != ''
+        run: |
+          PR_STATE=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            "https://api.github.com/repos/${{ github.repository }}/pulls/${{ env.EXISTING_PR_NUMBER }}" \
+            | jq -r '.state')
+
+          if [[ "$PR_STATE" == "closed" ]]; then
+            echo "🔄 Reopening closed PR #${{ env.EXISTING_PR_NUMBER }}..."
+            curl -s -X PATCH -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+              -H "Accept: application/vnd.github.v3+json" \
+              -d '{"state": "open"}' \
+              "https://api.github.com/repos/${{ github.repository }}/pulls/${{ env.EXISTING_PR_NUMBER }}"
+            echo "✅ PR #${{ env.EXISTING_PR_NUMBER }} reopened."
+          else
+            echo "PR #${{ env.EXISTING_PR_NUMBER }} is already open."
+          fi
+          echo "PR_NUMBER=${{ env.EXISTING_PR_NUMBER }}" >> $GITHUB_ENV
+
+
+      - name: Create PR (If Not Existing)
+        if: env.changes == 'true' && env.EXISTING_PR_NUMBER == ''
+        run: |
+          echo "No existing PR found. Creating new PR..."
+          PR_RESPONSE=$(curl -s -X POST -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github.v3+json" \
+            -d "{ \"title\": \"fix: Security updates\", \"head\": \"${{ env.BRANCH_NAME }}\", \"base\": \"${{ inputs.base_branch }}\", \"draft\": false }" \
+            "https://api.github.com/repos/${{ github.repository }}/pulls")
+
+          PR_NUMBER=$(echo "$PR_RESPONSE" | jq -r '.number')
+          PR_URL=$(echo "$PR_RESPONSE" | jq -r '.html_url')
+
+          if [[ "$PR_URL" == "null" || -z "$PR_URL" ]]; then
+            echo "❌ Error: PR creation failed. Full API response:"
+            echo "$PR_RESPONSE"
+            exit 1
+          else
+            echo "✅ Pull Request created: $PR_URL"
+            echo "PR_NUMBER=$PR_NUMBER" >> $GITHUB_ENV
+          fi
+
+      - name: Add or Update PR Comment for Audit Fixes
+        if: env.PR_NUMBER != ''
+        run: |
+          echo "🔍 Checking for existing PR comments for audit fixes..."
+
+          PR_COMMENT_BODY="🚀 *Audit fixes applied via automation.*\n\n"
+          PR_COMMENT_BODY+="@${{ github.repository_owner }}/maintained-actions-dev, please review the latest updates."
+
+          EXISTING_COMMENT_ID=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            "https://api.github.com/repos/${{ github.repository }}/issues/${{ env.PR_NUMBER }}/comments" \
+            | jq -r '.[] | select(.body | contains("Audit fixes applied via automation")) | .id' | tail -n 1)
+
+          if [[ -n "$EXISTING_COMMENT_ID" && "$EXISTING_COMMENT_ID" != "null" ]]; then
+            echo "🔄 Updating existing PR comment..."
+            curl -s -X PATCH -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+              -H "Accept: application/vnd.github.v3+json" \
+              -d "{\"body\": \"$PR_COMMENT_BODY\"}" \
+              "https://api.github.com/repos/${{ github.repository }}/issues/comments/$EXISTING_COMMENT_ID" > /dev/null
+            echo "✅ PR comment updated."
+          else
+            echo "📝 Creating new PR comment..."
+            curl -s -X POST -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+              -H "Accept: application/vnd.github.v3+json" \
+              -d "{\"body\": \"$PR_COMMENT_BODY\"}" \
+              "https://api.github.com/repos/${{ github.repository }}/issues/${{ env.PR_NUMBER }}/comments" > /dev/null
+            echo "✅ PR comment created."
+          fi
+
+
+      - name: Run OSV Scanner on lock file
+        id: osv_scan
+        run: |
+          API_RESPONSE=$(curl -s "https://api.github.com/repos/google/osv-scanner/releases/latest")
+          OSV_SCANNER_URL=$(echo "$API_RESPONSE" | jq -r '.assets[] | select(.name == "osv-scanner_linux_amd64") | .browser_download_url')
+
+          if [[ -z "$OSV_SCANNER_URL" || "$OSV_SCANNER_URL" == "null" ]]; then
+            echo "❌ Failed to fetch the latest OSV Scanner URL from GitHub API."
+            echo "GitHub API Response:"
+            echo "$API_RESPONSE"
+            exit 1
+          fi
+
+          echo "✅ Downloading OSV Scanner from: $OSV_SCANNER_URL"
+          curl -fsSL "$OSV_SCANNER_URL" -o osv-scanner
+          chmod +x osv-scanner
+
+          if file osv-scanner | grep -q "ELF"; then
+            echo "✅ OSV Scanner downloaded successfully."
+          else
+            echo "❌ OSV Scanner download failed or is corrupted."
+            cat osv-scanner
+            exit 1
+          fi
+
+          if [ -f "package-lock.json" ]; then
+            LOCKFILE="package-lock.json"
+          elif [ -f "yarn.lock" ]; then
+            LOCKFILE="yarn.lock"
+          else
+            echo "❌ No package-lock.json or yarn.lock found. Skipping OSV scan."
+            exit 0
+          fi
+
+          echo "🔍 Using lock file: $LOCKFILE"
+
+          ./osv-scanner --lockfile="$LOCKFILE" --json | tee osv-scan-output.json
+
+          if [ ! -s osv-scan-output.json ]; then
+            echo "⚠️ OSV Scanner did not return valid output. No vulnerabilities found."
+            exit 0
+          fi
+
+          VULNERABILITIES=$(jq '[.results[].packages[].vulnerabilities[]?] | select(length > 0)' osv-scan-output.json || echo "")
+
+          if [[ -n "$VULNERABILITIES" && "$VULNERABILITIES" != "null" && "$VULNERABILITIES" != "[]" ]]; then
+            echo "🚨 Vulnerabilities detected!"
+            echo "$VULNERABILITIES" | jq -r '.[] | "🔴 \(.id) - \(.summary)"'
+            echo "PENDING_VULNS=$(echo "$VULNERABILITIES" | base64 -w 0)" >> $GITHUB_ENV
+          else
+            echo "✅ No vulnerabilities found."
+          fi
+
+      - name: Add or Update PR Comment for Unfixable Vulnerabilities
+        if: env.PENDING_VULNS != ''
+        run: |
+          PR_COMMENT_BODY="🚨 *Post-audit scan detected remaining vulnerabilities.* \n\n"
+          PR_COMMENT_BODY+="**OSV Scanner Findings:**\n\`\`\`\n$(echo $PENDING_VULNS | base64 -d | jq -r '.[].id')\n\`\`\`\n\n"
+          PR_COMMENT_BODY+="@${{ github.repository_owner }}/maintained-actions-dev, please investigate."
+
+          COMMENTS_RESPONSE=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            "https://api.github.com/repos/${{ github.repository }}/issues/${{ env.PR_NUMBER }}/comments")
+
+          if echo "$COMMENTS_RESPONSE" | jq -e 'type == "array"' >/dev/null; then
+            EXISTING_COMMENT_ID=$(echo "$COMMENTS_RESPONSE" | jq -r '[.[] | select(.body | contains("Post-audit scan detected remaining vulnerabilities"))] | last | .id')
+          else
+            EXISTING_COMMENT_ID=""
+          fi
+
+          if [[ -n "$EXISTING_COMMENT_ID" && "$EXISTING_COMMENT_ID" != "null" ]]; then
+            echo "🔄 Updating existing PR comment..."
+            curl -s -X PATCH -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+              -H "Accept: application/vnd.github.v3+json" \
+              -d "{\"body\": \"$PR_COMMENT_BODY\"}" \
+              "https://api.github.com/repos/${{ github.repository }}/issues/comments/$EXISTING_COMMENT_ID" > /dev/null
+            echo "✅ PR comment updated."
+          else
+            echo "📝 Creating new PR comment..."
+            curl -s -X POST -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+              -H "Accept: application/vnd.github.v3+json" \
+              -d "{\"body\": \"$PR_COMMENT_BODY\"}" \
+              "https://api.github.com/repos/${{ github.repository }}/issues/${{ env.PR_NUMBER }}/comments" > /dev/null
+            echo "✅ PR comment created."
+          fi
+
+      - name: Create or Update Issue for Unfixable Vulnerabilities
+        if: env.PENDING_VULNS != ''
+        run: |
+          echo "🔍 Checking for existing security issue..."
+          
+          EXISTING_ISSUE=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            "https://api.github.com/repos/${{ github.repository }}/issues?state=open" \
+            | jq -r '.[] | select(.title == "Security Alert: Unfixable Vulnerabilities") | .number' | tail -n 1)
+
+          NEW_VULNS=$(echo $PENDING_VULNS | base64 -d | jq -r '.[].id')
+          ISSUE_BODY="🚨 *OSV Scanner found unresolved vulnerabilities after audit fix.* \n\n"
+          ISSUE_BODY+="**Vulnerabilities in \`${{ inputs.package_manager }}\`:**\n\`\`\`\n$NEW_VULNS\n\`\`\`\n\n"
+          ISSUE_BODY+="@${{ github.repository_owner }}/maintained-actions-dev, please investigate."
+
+          if [[ -n "$EXISTING_ISSUE" && "$EXISTING_ISSUE" != "null" ]]; then
+            echo "🔄 Updating existing issue #$EXISTING_ISSUE..."
+
+            EXISTING_BODY=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+              "https://api.github.com/repos/${{ github.repository }}/issues/$EXISTING_ISSUE" \
+              | jq -r '.body')
+
+            EXISTING_VULNS=$(echo "$EXISTING_BODY" | grep -oP '(?<=\`\`\`\n)(.*)(?=\n\`\`\`)' || echo "")
+
+            if [[ "$EXISTING_VULNS" == "$NEW_VULNS" ]]; then
+              echo "✅ No new vulnerabilities detected. Issue remains unchanged."
+            else
+              UPDATED_ISSUE_BODY="$EXISTING_BODY\n\n🔄 **New Vulnerabilities Detected:**\n\`\`\`\n$NEW_VULNS\n\`\`\`\n"
+
+              curl -s -X PATCH -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+                -H "Accept: application/vnd.github.v3+json" \
+                -d "{\"body\": \"$UPDATED_ISSUE_BODY\"}" \
+                "https://api.github.com/repos/${{ github.repository }}/issues/$EXISTING_ISSUE" > /dev/null
+              echo "✅ Issue updated: https://github.com/${{ github.repository }}/issues/$EXISTING_ISSUE"
+            fi
+
+          else
+            echo "📝 Creating a new GitHub Issue for unresolved vulnerabilities..."
+            
+            ISSUE_RESPONSE=$(curl -s -X POST -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+              -H "Accept: application/vnd.github.v3+json" \
+              -d "{
+                \"title\": \"Security Alert: Unfixable Vulnerabilities\",
+                \"body\": \"$ISSUE_BODY\",
+                \"assignees\": [\"Raj-StepSecurity\"]
+              }" "https://api.github.com/repos/${{ github.repository }}/issues")
+
+            ISSUE_URL=$(echo "$ISSUE_RESPONSE" | jq -r '.html_url')
+
+            if [[ "$ISSUE_URL" == "null" || -z "$ISSUE_URL" ]]; then
+              echo "⚠️ Warning: Issue creation failed. Continuing workflow."
+              echo "GitHub API Response: $ISSUE_RESPONSE"
+            else
+              echo "✅ New issue created: $ISSUE_URL"
+            fi
+          fi
+

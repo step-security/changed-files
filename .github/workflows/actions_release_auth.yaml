@@ -1,0 +1,252 @@
+name: Release GitHub Actions
+
+on:
+  workflow_call:
+    inputs:
+      tag:
+        required: true
+        type: string
+      script:
+        description: "Specify the build script to run"
+        required: false
+        type: string
+        default: "npm run build"
+
+permissions:
+  contents: read
+
+jobs:
+  pre-release:
+    name: Pre-release Check
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@0d381219ddf674d61a7572ddd19d7941e271515c # v2.9.0
+        with:
+          egress-policy: audit
+
+      - name: Checkout repository
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+
+      - name: Determine Action Type
+        id: check-action
+        run: |
+          if grep -E -q "using: ['\"]?docker['\"]?" action.yml action.yaml 2>/dev/null; then
+            echo "action_type=docker" >> $GITHUB_ENV
+          elif grep -E -q "using: ['\"]?node[0-9]+['\"]?" action.yml action.yaml 2>/dev/null; then
+            echo "action_type=node" >> $GITHUB_ENV
+          else
+            echo "action_type=unknown" >> $GITHUB_ENV
+          fi
+        shell: bash
+
+      - name: Log Action Type
+        run: |
+          echo "**Action Type**: ${{ env.action_type }}" >> $GITHUB_STEP_SUMMARY
+
+      - name: Print provided tag
+        run: |
+          echo "**Provided Tag**: ${{ github.event.inputs.tag }}" >> $GITHUB_STEP_SUMMARY
+
+      - name: Verify Tag Format
+        id: verify-tag
+        run: |
+          TAG="${{ github.event.inputs.tag }}"
+          SEMVER_REGEX="^v([1-9][0-9]*|0)\.([1-9][0-9]*|0)\.([1-9][0-9]*|0)(-([0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*))?(\+([0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*))?$"
+
+          if [[ ! "$TAG" =~ $SEMVER_REGEX ]]; then
+            if [[ ! "$TAG" =~ ^v ]]; then
+              echo "**Validation Failed**: Missing 'v' prefix. Example of invalid tag: 1.0.0" >> $GITHUB_STEP_SUMMARY
+            elif [[ "$TAG" =~ ^v[0-9]+\.[0-9]+$ ]]; then
+              echo "**Validation Failed**: Missing patch version. Example of invalid tag: v1.0" >> $GITHUB_STEP_SUMMARY
+            elif [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+-$ ]]; then
+              echo "**Validation Failed**: Incomplete pre-release version. Example of invalid tag: v1.0.0-" >> $GITHUB_STEP_SUMMARY
+            elif [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+\+$ ]]; then
+              echo "**Validation Failed**: Incomplete build metadata. Example of invalid tag: v1.0.0+" >> $GITHUB_STEP_SUMMARY
+            elif [[ "$TAG" =~ v0[0-9]+|\.0[0-9]+|\.0[0-9]+ ]]; then
+              echo "**Validation Failed**: Major, minor, and patch versions must not contain leading zeros. Example of invalid tags: v01.0.0, v1.02.0, v1.0.03" >> $GITHUB_STEP_SUMMARY
+            elif [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+-[^0-9A-Za-z-.] || "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+-.*[^0-9A-Za-z-.] ]]; then
+              echo "**Validation Failed**: Pre-release versions must contain only alphanumeric characters and hyphens. Example of invalid tag: v1.0.0-alpha@1" >> $GITHUB_STEP_SUMMARY
+            elif [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+\+[^0-9A-Za-z-.] || "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+\+.*[^0-9A-Za-z-.] ]]; then
+              echo "**Validation Failed**: Build metadata must contain only alphanumeric characters and hyphens. Example of invalid tag: v1.0.0+build@1234" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "**Validation Failed**: Invalid tag format. The tag must follow semantic versioning (e.g., v1.2.3, v1.2.3-beta.1, v1.2.3+build.1234, v1.2.3-beta.1+build.1234)." >> $GITHUB_STEP_SUMMARY
+            fi
+            exit 1
+          fi
+
+      - name: Set up Node.js
+        if: env.action_type == 'node'
+        uses: actions/setup-node@1e60f620b9541d16bece96c5465dc8ee9832be0b # v4.0.3
+        with:
+          node-version: '20'
+      
+      - name: Install dependencies
+        if: env.action_type == 'node'
+        run: |
+          if [ -f yarn.lock ]; then
+            yarn install
+          else
+            echo "//npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}" > ~/.npmrc
+            echo "@${{ github.repository_owner }}:registry=https://npm.pkg.github.com/" >> ~/.npmrc
+            if [ -f package-lock.json ]; then
+              npm ci
+            elif [ -f pnpm-lock.yaml ]; then
+              npm install -g pnpm
+              pnpm install
+            fi
+          fi
+      
+      - name: Run Specified Build Script
+        if: env.action_type == 'node'
+        id: build-step
+        run: |
+          SCRIPT="${{ inputs.script }}"
+          eval "$SCRIPT"
+          EXIT_CODE=$?
+          if [ $EXIT_CODE -ne 0 ]; then
+            echo "❌ Build script failed or not found!"
+            exit 1
+          fi
+
+      - name: Compare the expected and actual dist/ directories
+        if: env.action_type == 'node' && steps.build-step.outcome == 'success'
+        run: |
+          DIFF=$(git diff --ignore-all-space --ignore-blank-lines dist/)
+          
+          # Filter out empty lines and whitespace-only lines using awk
+          DIFF_FILTERED=$(echo "$DIFF" | awk 'NF')
+      
+          # Check if there are meaningful differences
+          if [ -n "$DIFF_FILTERED" ]; then
+            echo "**Uncommitted changes detected after build. See the build log for details.**" >> $GITHUB_STEP_SUMMARY
+            
+            echo "### Detected Uncommitted Changes"
+            echo "Detected uncommitted changes after build. See the details below:"
+            echo '```diff'
+            while IFS= read -r line; do
+              if [[ "$line" == \+* ]]; then
+                echo -e "\033[32m$line\033[0m" # Green for additions
+              elif [[ "$line" == \-* ]]; then
+                echo -e "\033[31m$line\033[0m" # Red for deletions
+              else
+                echo "$line"
+              fi
+            done <<< "$DIFF_FILTERED"
+            echo '```'
+            exit 1
+          else
+            echo "No meaningful uncommitted changes detected."
+          fi
+        shell: bash
+
+  release:
+    environment:
+      name: releaseNewActionVersion
+    permissions:
+      contents: write
+    outputs:
+      hashes: ${{ steps.hash.outputs.hashes }}
+    runs-on: ubuntu-latest
+    needs: pre-release
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@0d381219ddf674d61a7572ddd19d7941e271515c # v2.9.0
+        with:
+          egress-policy: audit
+
+      - name: Checkout code
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+
+      - name: Generate SBOM
+        uses: anchore/sbom-action@e8d2a6937ecead383dfe75190d104edd1f9c5751 # v0.16.0
+        with:
+          path: "./"
+          output-file: ./sbom-${{ github.event.inputs.tag }}.spdx.json
+          format: "spdx"
+
+      - name: Create and Push Tag
+        run: |
+          git tag ${{ github.event.inputs.tag }}
+          git push origin ${{ github.event.inputs.tag }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create GitHub Release
+        run: gh release create ${{ github.event.inputs.tag }} --generate-notes
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload SBOM as Release Asset
+        run: gh release upload ${{ github.event.inputs.tag }} *.spdx.json
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Update Semantic Tag
+        run: |
+          TAG=${{ github.event.inputs.tag }}
+          SEMANTIC_TAG=$(echo $TAG | grep -oP '^v\d+')
+          git tag -f $SEMANTIC_TAG $TAG
+          git push -f origin $SEMANTIC_TAG
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Generate and Upload Provenance File
+        run: |
+          echo "Generating provenance.json"
+          OWNER="${{ github.repository_owner }}"
+          REPO="${{ github.event.repository.name }}"
+          TAG_NAME="${{ github.event.inputs.tag }}"
+          COMMIT_SHA=$(git show-ref -s $TAG_NAME)
+          TAG_DETAILS=$(gh api repos/$OWNER/$REPO/git/commits/$COMMIT_SHA | jq '.')
+          jq -n --arg repository "${{ github.repository }}" \
+               --arg workflow "${{ github.workflow }}" \
+               --arg run_id "${{ github.run_id }}" \
+               --arg run_attempt "${{ github.run_attempt }}" \
+               --arg tag "$TAG_NAME" \
+               --arg commit_sha "$COMMIT_SHA" \
+               --argjson tag_details "$TAG_DETAILS" \
+               '{"repository": $repository, "workflow": $workflow, "run_id": $run_id, "run_attempt": $run_attempt, "tag": $tag, "commit_sha": $commit_sha, "tag_details": $tag_details}' > provenance.json
+          cat provenance.json
+          gh release upload ${{ github.event.inputs.tag }} provenance.json
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Generate Hashes
+        shell: bash
+        id: hash
+        run: |
+          echo "Generating hashes for artifacts"
+          HASHES=$(sha256sum sbom-${{ github.event.inputs.tag }}.spdx.json provenance.json | base64 -w0)
+          echo "hashes=$HASHES" >> "$GITHUB_OUTPUT"
+          echo "hashes=$HASHES"
+
+      - name: Create and Upload provenance_verifier.sh
+        run: |
+          echo '#!/bin/bash' > provenance_verifier.sh
+          echo '# Install slsa-verifier from https://github.com/slsa-framework/slsa-verifier' >> provenance_verifier.sh
+          echo '# Format: slsa-verifier verify-artifact --provenance-path <path to multiple.intoto.jsonl> --source-uri github.com/${{ github.repository }} <path to sbom-${{ github.event.inputs.tag }}.spdx.json> <path to provenance.json>' >> provenance_verifier.sh
+          echo '# For example: slsa-verifier verify-artifact --provenance-path ~/${{ github.repository }}/multiple.intoto.jsonl --source-uri github.com/${{ github.repository }} ~/${{ github.repository }}/sbom-${{ github.event.inputs.tag }}.spdx.json ~/${{ github.repository }}/provenance.json' >> provenance_verifier.sh
+          chmod +x provenance_verifier.sh
+          cat provenance_verifier.sh
+          gh release upload ${{ github.event.inputs.tag }} provenance_verifier.sh
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # This step calls the generic workflow to generate provenance.
+  provenance:
+    needs: [release]
+    permissions:
+      actions: read
+      id-token: write
+      contents: write
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.0.0
+    with:
+      base64-subjects: "${{ needs.release.outputs.hashes }}"
+      # Upload provenance to a new release
+      upload-assets: true
+      upload-tag-name: "${{ github.event.inputs.tag }}"

@@ -1,0 +1,294 @@
+name: Auto Cherry-Pick from Upstream
+
+on:
+  workflow_call:
+    inputs:
+      original-owner:
+        description: "Owner of the original repository"
+        required: true
+        type: string
+      repo-name:
+        description: "Repository name to sync from"
+        required: true
+        type: string
+      base_branch:
+        description: "Base branch to create the PR against"
+        required: false
+        type: string
+        default: "main"
+      use_private_packages:
+        description: "Use private packages (default: false)"
+        required: false
+        type: boolean
+      script:
+        description: "Specify the npm/yarn script to run if available"
+        required: false
+        type: string
+        default: "npm run build"
+      package_manager:
+        description: "Specify package manager if available (npm or yarn)"
+        required: false
+        type: string
+        default: "npm"
+
+permissions:
+  contents: write
+  pull-requests: write
+  packages: read
+
+jobs:
+  check-upstream:
+    name: Cherry-Pick & Create PR
+    runs-on: ubuntu-latest
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@4d991eb9b905ef189e4c376166672c3f2f230481 # v2.11.0
+        with:
+          egress-policy: audit
+
+      - name: Checkout Repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+
+      - name: Determine Action Type
+        id: check-action
+        run: |
+          if grep -E -q "using: ['\"]?docker['\"]?" action.yml action.yaml 2>/dev/null; then
+            echo "action_type=docker" >> $GITHUB_ENV
+          elif grep -E -q "using: ['\"]?node[0-9]+['\"]?" action.yml action.yaml 2>/dev/null; then
+            echo "action_type=node" >> $GITHUB_ENV
+          else
+            echo "action_type=unknown" >> $GITHUB_ENV
+          fi
+        shell: bash
+
+      - name: Log Action Type
+        run: |
+          echo "**Action Type**: ${{ env.action_type }}" >> $GITHUB_STEP_SUMMARY
+      - name: Set up Git User
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+      - name: Add Upstream Remote and Fetch Changes
+        run: |
+          UPSTREAM_URL="https://github.com/${{ inputs.original-owner }}/${{ inputs.repo-name }}.git"
+          echo "Fetching from upstream: $UPSTREAM_URL"
+          
+          git remote | grep -q upstream || git remote add upstream "$UPSTREAM_URL"
+          DEFAULT_BRANCH=$(git ls-remote --symref "$UPSTREAM_URL" HEAD | awk '/^ref:/ {sub("refs/heads/", "", $2); print $2}')
+          echo "Detected upstream default branch: $DEFAULT_BRANCH"
+          git fetch upstream $DEFAULT_BRANCH
+          echo "DEFAULT_BRANCH=$DEFAULT_BRANCH" >> $GITHUB_ENV
+      - name: Get Last Commit Date in Our Repo
+        id: last_commit
+        run: |
+          LAST_COMMIT_DATE=$(git log --pretty=format:'%cd' --date=iso8601-strict -1 origin/${{ inputs.base_branch }} || echo "")
+          echo "LAST_COMMIT_DATE=$LAST_COMMIT_DATE" >> $GITHUB_ENV
+      - name: Get New Commits from Upstream Since Last Commit
+        run: |
+          echo "Fetching new commits from upstream since: ${{ env.LAST_COMMIT_DATE }}"
+          NEW_COMMITS=$(git log --since="${{ env.LAST_COMMIT_DATE }}" --pretty=format:'%H' upstream/${{ env.DEFAULT_BRANCH }}) || true
+          
+          if [ -z "$NEW_COMMITS" ]; then
+            echo "No new commits found. Exiting."
+            exit 0
+          fi
+          echo "NEW_COMMITS<<EOF" >> $GITHUB_ENV
+          echo "$NEW_COMMITS" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+      - name: Check for Existing PR
+        id: check_pr
+        run: |
+          REPO=${{ github.repository }}
+          TOKEN=${{ secrets.GITHUB_TOKEN }}
+          BRANCH_NAME="auto-cherry-pick"
+          
+          EXISTING_PR_JSON=$(curl -s -H "Authorization: token $TOKEN" \
+            "https://api.github.com/repos/$REPO/pulls?state=open&head=${{ github.repository_owner }}:$BRANCH_NAME")
+          EXISTING_PR_URL=$(echo "$EXISTING_PR_JSON" | jq -r '.[0] | select(.html_url != null) | .html_url' || echo "")
+          EXISTING_PR_NUMBER=$(echo "$EXISTING_PR_JSON" | jq -r '.[0] | select(.number != null) | .number' || echo "")
+          if [[ -n "$EXISTING_PR_URL" && -n "$EXISTING_PR_NUMBER" ]]; then
+            echo "Existing PR found: $EXISTING_PR_URL (PR #$EXISTING_PR_NUMBER)"
+            echo "pr_exists=true" >> $GITHUB_ENV
+            echo "pr_url=$EXISTING_PR_URL" >> $GITHUB_ENV
+            echo "PR_NUMBER=$EXISTING_PR_NUMBER" >> $GITHUB_ENV
+          else
+            echo "No existing PR found."
+            echo "pr_exists=false" >> $GITHUB_ENV
+          fi
+      - name: Create or Reset Branch
+        run: |
+          BRANCH_NAME="auto-cherry-pick"
+          git fetch origin $BRANCH_NAME || true
+          if git show-ref --verify --quiet refs/heads/$BRANCH_NAME; then
+            echo "Branch $BRANCH_NAME exists. Resetting it."
+            git checkout $BRANCH_NAME
+            git reset --hard origin/${{ inputs.base_branch }}
+          else
+            echo "Creating new branch: $BRANCH_NAME"
+            git checkout -b $BRANCH_NAME
+          fi
+          echo "BRANCH_NAME=$BRANCH_NAME" >> $GITHUB_ENV
+      - name: Cherry-Pick New Commits
+        run: |
+          SKIPPED_COMMITS=""
+          CHANGES_FOUND=false
+          WORKFLOW_CHANGES=false
+          while read -r COMMIT_HASH; do
+            echo "Processing commit: $COMMIT_HASH"
+            git cherry-pick --abort || true
+            if [ $(git rev-list --parents -n 1 $COMMIT_HASH | wc -w) -gt 2 ]; then
+              echo "⚠️ Merge commit detected ($COMMIT_HASH). Using -m 1."
+              if ! git cherry-pick -m 1 $COMMIT_HASH; then
+                echo "❌ Merge conflict detected in $COMMIT_HASH. Skipping."
+                SKIPPED_COMMITS="${SKIPPED_COMMITS}\n$COMMIT_HASH"
+                git cherry-pick --abort || true
+                continue
+              fi
+            else
+              if ! git cherry-pick $COMMIT_HASH; then
+                echo "❌ Conflict detected or empty commit for $COMMIT_HASH. Skipping."
+                SKIPPED_COMMITS="${SKIPPED_COMMITS}\n$COMMIT_HASH"
+                git cherry-pick --abort || true
+                continue
+              fi
+            fi
+            LATEST_COMMIT_FILES=$(git diff-tree --no-commit-id --name-only -r HEAD)
+            WORKFLOW_FILE_CHANGES=$(echo "$LATEST_COMMIT_FILES" | grep "^.github/workflows/" || true)
+            NON_WORKFLOW_CHANGES=$(echo "$LATEST_COMMIT_FILES" | grep -v "^.github/workflows/" || true)
+            if [ -n "$WORKFLOW_FILE_CHANGES" ]; then
+              echo "⚠️ Workflow file changes detected. They will not be committed."
+              WORKFLOW_CHANGES=true
+              git checkout HEAD -- .github/workflows/
+              git reset HEAD -- .github/workflows/
+            fi
+            if [ -n "$NON_WORKFLOW_CHANGES" ]; then
+              echo "✅ Detected non-workflow file changes."
+              CHANGES_FOUND=true
+            else
+              echo "⚠️ No real changes after workflow cleanup."
+            fi
+            git commit --amend --no-edit --author="github-actions[bot] <github-actions[bot]@users.noreply.github.com>"
+          done <<< "${{ env.NEW_COMMITS }}"
+          if [ "$CHANGES_FOUND" = true ]; then
+            echo "CHANGES=true" >> $GITHUB_ENV
+          else
+            echo "No changes after cherry-pick. Skipping further steps."
+            echo "CHANGES=false" >> $GITHUB_ENV
+          fi
+          if [ "$WORKFLOW_CHANGES" = true ]; then
+            echo "WORKFLOW_CHANGES=true" >> $GITHUB_ENV
+          fi
+          echo "SKIPPED_COMMITS<<EOF" >> $GITHUB_ENV
+          echo -e "$SKIPPED_COMMITS" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+      - name: Set Up Node.js
+        if: env.action_type == 'node' && env.CHANGES == 'true'
+        uses: actions/setup-node@1d0ff469b7ec7b3cb9d8673fde0c81c44821de2a # v4.2.0
+        with:
+          node-version: "20"
+          cache: ${{ inputs.package_manager }}
+
+      - name: Authenticate npm with GitHub Packages (if using private packages)
+        if: env.action_type == 'node' && inputs.use_private_packages == true
+        run: |
+          echo "//npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}" > ~/.npmrc
+          echo "@${{ github.repository_owner }}:registry=https://npm.pkg.github.com/" >> ~/.npmrc
+      - name: Install dependencies
+        if: env.action_type == 'node' && env.CHANGES == 'true'
+        run: |
+          if [ "${{ inputs.package_manager }}" == "npm" ]; then
+            npm ci
+          else
+            yarn install --frozen-lockfile
+          fi
+      - name: Run Specified Build Script
+        if: env.action_type == 'node' && env.CHANGES == 'true'
+        run: |
+          eval "${{ inputs.script }}" || echo "No build script found or failed, skipping."
+          git add .
+          if git diff --cached --exit-code; then
+            echo "No additional changes from build process."
+          else
+            git commit -m "chore: update build artifacts"
+          fi
+      - name: Create or Update Pull Request
+        if: env.CHANGES == 'true'
+        run: |
+          if [ "${{ env.pr_exists }}" == "true" ]; then
+            echo "✅ PR already exists: ${{ env.pr_url }} - Forcing push with updates..."
+            git push origin "$BRANCH_NAME" --force
+          else
+            echo "Creating a new PR..."
+            git push origin "$BRANCH_NAME" --force
+            API_RESPONSE=$(curl -s -X POST -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+              -H "Accept: application/vnd.github.v3+json" \
+              -d "{
+                \"title\": \"fix: Sync Upstream Changes\",
+                \"body\": \"Cherry-picked commits from upstream automatically.\",
+                \"head\": \"${{ env.BRANCH_NAME }}\",
+                \"base\": \"${{ inputs.base_branch }}\",
+                \"draft\": false
+              }" "https://api.github.com/repos/${{ github.repository }}/pulls")
+            echo "API Response: $API_RESPONSE"
+            PR_URL=$(echo "$API_RESPONSE" | jq -r '.html_url')
+            PR_NUMBER=$(echo "$API_RESPONSE" | jq -r '.number')
+            if [[ "$PR_URL" == "null" ]]; then
+              echo "❌ Error: PR creation failed. Check API response above."
+              exit 1
+            else
+              echo "✅ Pull Request created: $PR_URL"
+              echo "PR_NUMBER=$PR_NUMBER" >> $GITHUB_ENV
+            fi
+          fi
+      - name: Comment on PR with Updates (Single Comment Per PR)
+        if: env.PR_NUMBER != ''
+        run: |
+          echo "Checking for existing bot comment on PR #${{ env.PR_NUMBER }}"
+          {
+            echo "🚀 PR Updated!"
+            echo ""
+            echo "The PR has been updated with the latest cherry-picked commits."
+            echo ""
+            if [ -n "${{ env.SKIPPED_COMMITS }}" ]; then
+              echo "⚠️ Skipped Commits Due to Conflicts:"
+              while IFS= read -r line; do
+                echo "- $line"
+              done <<< "${{ env.SKIPPED_COMMITS }}"
+              echo ""
+            fi
+            if [ "${{ env.WORKFLOW_CHANGES }}" == "true" ]; then
+              echo "⚠️ Workflow file changes were detected and **excluded from this PR**."
+              echo "Please review and handle them manually."
+              echo ""
+            fi
+          } > comment_body.txt
+          COMMENT_BODY_ESCAPED=$(jq -Rs . < comment_body.txt)
+          EXISTING_COMMENT_ID=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github.v3+json" \
+            "https://api.github.com/repos/${{ github.repository }}/issues/${{ env.PR_NUMBER }}/comments" | 
+            jq -r '.[] | select(.body | contains("🚀 PR Updated!")) | .id')
+          if [ -n "$EXISTING_COMMENT_ID" ]; then
+            echo "Updating existing comment: $EXISTING_COMMENT_ID"
+            curl -s -X PATCH -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+              -H "Accept: application/vnd.github.v3+json" \
+              -d "{\"body\": $COMMENT_BODY_ESCAPED}" \
+              "https://api.github.com/repos/${{ github.repository }}/issues/comments/$EXISTING_COMMENT_ID"
+          else
+            echo "No existing comment found. Creating a new comment."
+            curl -s -X POST -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+              -H "Accept: application/vnd.github.v3+json" \
+              -d "{\"body\": $COMMENT_BODY_ESCAPED}" \
+              "https://api.github.com/repos/${{ github.repository }}/issues/${{ env.PR_NUMBER }}/comments"
+          fi
+
+      - name: Request Review
+        if: env.PR_NUMBER != ''
+        run: |
+          curl -s -X POST -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github.v3+json" \
+            -d '{
+              "team_reviewers": ["maintained-actions-dev"]
+            }' \
+            "https://api.github.com/repos/${{ github.repository }}/pulls/${{ env.PR_NUMBER }}/requested_reviewers"
