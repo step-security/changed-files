@@ -23,7 +23,7 @@ jobs:
           fetch-depth: 0
 
       - name: Run auto-doc
-        uses: tj-actions/auto-doc@79cbc18cd7c4b037bb2fe25199cb14fef4bbad43 # v3.5.0
+        uses: tj-actions/auto-doc@b10ceedffd794ec29a8fa8700529f40c1b64a951 # v3.6.0
         with:
           use_code_blocks: true
           use_major_version: true
