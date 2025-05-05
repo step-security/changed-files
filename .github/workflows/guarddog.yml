@@ -1,0 +1,14 @@
+name: Run GuardDog Scan on PRs
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  call-guarddog-scan:
+    uses: step-security/reusable-workflows/.github/workflows/guarddog.yml@v1
