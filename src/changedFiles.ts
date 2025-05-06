@@ -89,17 +89,21 @@ export const processChangedFiles = async ({
       core.endGroup()
     }
 
-    await setArrayOutput({
-      key: 'modified_keys',
-      inputs,
-      value: modifiedKeys
-    })
+    if (modifiedKeys.length > 0) {
+      await setArrayOutput({
+        key: 'modified_keys',
+        inputs,
+        value: modifiedKeys
+      })
+    }
 
-    await setArrayOutput({
-      key: 'changed_keys',
-      inputs,
-      value: changedKeys
-    })
+    if (changedKeys.length > 0) {
+      await setArrayOutput({
+        key: 'changed_keys',
+        inputs,
+        value: changedKeys
+      })
+    }
   }
 
   if (filePatterns.length === 0 && Object.keys(yamlFilePatterns).length === 0) {
