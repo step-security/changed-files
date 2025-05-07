@@ -35,8 +35,8 @@ jobs:
     outputs:
       files_changed: ${{ steps.changed_files.outputs.files_changed }}
     permissions:
-      contents: write
-      pull-requests: read
+      contents: read
+      pull-requests: write
     steps:
       - name: Harden the runner (Audit all outbound calls)
         uses: step-security/harden-runner@4d991eb9b905ef189e4c376166672c3f2f230481 # v2.11.0
@@ -75,8 +75,7 @@ jobs:
       - name: Run build and test
         run: |
           yarn all
-        env:
-          GITHUB_EVENT_PULL_REQUEST_HEAD_REPO_FORK: ${{ github.event.pull_request.head.repo.fork }}
+
 
       # - name: Verify Changed files
       #   uses: tj-actions/verify-changed-files@v20
@@ -87,34 +86,6 @@ jobs:
       #       src
       #       dist
 
-      - name: Commit files
-        if: steps.changed_files.outputs.files_changed == 'true' && github.event_name == 'pull_request'
-        run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git add src dist
-          git commit -m "Added missing changes and modified dist assets."
-
-      - name: Push changes
-        if: steps.changed_files.outputs.files_changed == 'true' && github.event_name == 'pull_request'
-        continue-on-error: true
-        uses: ad-m/github-push-action@77c5b412c50b723d2a4fbc6d71fb5723bcd439aa # master
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          branch: ${{ github.head_ref }}
-
-      - name: Upload build assets
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
-        with:
-          name: build-assets
-          path: dist
-
-      - name: Run codacy-coverage-reporter
-        uses: codacy/codacy-coverage-reporter-action@89d6c85cfafaec52c72b6c5e8b2878d33104c699 # v1.3.0
-        continue-on-error: true
-        with:
-          project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
-          coverage-reports: coverage/lcov.info
 
   # test-multiple-repositories:
   #   name: Test with multiple repositories
