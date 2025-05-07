@@ -1,7 +1,7 @@
 name: Format README.md
 
 permissions:
-  contents: write
+  contents: read
   pull-requests: write
 
 on:
