@@ -17,6 +17,9 @@ on:
         required: false
         default: "yarn run all"
 
+  schedule:
+    - cron: "0 0 * * 1"
+
 permissions:
   contents: write
   pull-requests: write
@@ -25,7 +28,7 @@ permissions:
 
 jobs:
   audit-fix:
-    uses: step-security/reusable-workflows/.github/workflows/auto_cherry_pick.yaml@upstream-Changes-CherryPick
+    uses: step-security/reusable-workflows/.github/workflows/auto_cherry_pick.yaml@v1
     with:
       original-owner: "tj-actions"
       repo-name: "changed-files"
