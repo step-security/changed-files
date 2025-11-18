@@ -43,7 +43,7 @@ jobs:
         with:
           egress-policy: audit
 
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5.0.1
         with:
           persist-credentials: false
           fetch-depth: 0
@@ -96,7 +96,7 @@ jobs:
   #     contents: read
   #   steps:
   #     - name: Checkout into dir1
-  #       uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+  #       uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5.0.1
   #       with:
   #         repository: ${{ github.event.pull_request.head.repo.full_name }}
   #         submodules: true
@@ -136,7 +136,7 @@ jobs:
   #         path: dir2/dist
 
   #     - name: Checkout into dir2
-  #       uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+  #       uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5.0.1
   #       with:
   #         repository: ${{ github.event.pull_request.head.repo.full_name }}
   #         submodules: true
@@ -172,7 +172,7 @@ jobs:
   #     contents: read
   #   steps:
   #     - name: Checkout branch
-  #       uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+  #       uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5.0.1
   #       with:
   #         repository: ${{ github.event.pull_request.head.repo.full_name }}
   #         fetch-depth: 0
@@ -232,7 +232,7 @@ jobs:
 
   #   steps:
   #     - name: Checkout branch
-  #       uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+  #       uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5.0.1
   #       with:
   #         repository: ${{ github.event.pull_request.head.repo.full_name }}
   #         fetch-depth: 0
@@ -276,7 +276,7 @@ jobs:
 
   #   steps:
   #     - name: Checkout branch
-  #       uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+  #       uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5.0.1
   #       with:
   #         repository: ${{ github.event.pull_request.head.repo.full_name }}
   #         fetch-depth: 0
@@ -315,7 +315,7 @@ jobs:
 
   #   steps:
   #     - name: Checkout branch
-  #       uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+  #       uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5.0.1
   #       with:
   #         repository: ${{ github.event.pull_request.head.repo.full_name }}
   #         fetch-depth: ${{ matrix.fetch-depth }}
@@ -349,7 +349,7 @@ jobs:
 
   #   steps:
   #     - name: Checkout branch
-  #       uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+  #       uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5.0.1
   #       with:
   #         ref: ${{ github.event.pull_request.head.sha }}
 
@@ -383,7 +383,7 @@ jobs:
 
   #   steps:
   #     - name: Checkout branch
-  #       uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+  #       uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5.0.1
   #       with:
   #         fetch-depth: ${{ matrix.fetch-depth }}
   #         persist-credentials: false
@@ -413,7 +413,7 @@ jobs:
   #     contents: read
   #   steps:
   #     - name: Checkout branch
-  #       uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+  #       uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5.0.1
 
   #     - name: Download build assets
   #       uses: actions/download-artifact@v4
@@ -468,7 +468,7 @@ jobs:
   #     contents: read
   #   steps:
   #     - name: Checkout branch
-  #       uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+  #       uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5.0.1
 
   #     - name: Download build assets
   #       uses: actions/download-artifact@v4
@@ -523,7 +523,7 @@ jobs:
   #     pull-requests: read
   #   steps:
   #     - name: Checkout into dir1
-  #       uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+  #       uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5.0.1
   #       with:
   #         repository: ${{ github.event.pull_request.head.repo.full_name }}
   #         submodules: true
@@ -555,7 +555,7 @@ jobs:
   #     contents: read
   #   steps:
   #     - name: Checkout branch
-  #       uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+  #       uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5.0.1
   #       with:
   #         repository: ${{ github.event.pull_request.head.repo.full_name }}
   #         submodules: true
@@ -592,7 +592,7 @@ jobs:
   #     contents: read
   #   steps:
   #     - name: Checkout into dir1
-  #       uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+  #       uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5.0.1
   #       with:
   #         repository: ${{ github.event.pull_request.head.repo.full_name }}
   #         submodules: true
@@ -631,7 +631,7 @@ jobs:
 
   #   steps:
   #     - name: Checkout branch
-  #       uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+  #       uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5.0.1
   #       with:
   #         ref: ${{ github.event.pull_request.head.sha || github.sha }}
   #         submodules: recursive
@@ -697,7 +697,7 @@ jobs:
 
   #   steps:
   #     - name: Checkout branch
-  #       uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+  #       uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5.0.1
   #       with:
   #         ref: ${{ github.event.pull_request.head.sha || github.sha }}
   #         submodules: recursive
@@ -792,7 +792,7 @@ jobs:
 
   #   steps:
   #     - name: Checkout branch
-  #       uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+  #       uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5.0.1
   #       with:
   #         ref: ${{ github.event.pull_request.head.sha || github.sha }}
   #         submodules: recursive
@@ -978,7 +978,7 @@ jobs:
   #     contents: read
   #   steps:
   #     - name: Checkout branch
-  #       uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+  #       uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5.0.1
   #       with:
   #         ref: 2c65f7da2a8dc85c1b5225d02d7088a3825a29c3
   #         repository: ${{ github.event.pull_request.head.repo.full_name }}
@@ -1016,7 +1016,7 @@ jobs:
   #     contents: read
   #   steps:
   #     - name: Checkout branch
-  #       uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+  #       uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5.0.1
   #       with:
   #         ref: ${{ github.event.pull_request.head.sha }}
   #         repository: ${{ github.event.pull_request.head.repo.full_name }}
@@ -1095,7 +1095,7 @@ jobs:
         
   #   steps:
   #     - name: Checkout branch
-  #       uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+  #       uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5.0.1
   #       with:
   #         ref: ${{ github.event.pull_request.head.sha }}
   #         repository: ${{ github.event.pull_request.head.repo.full_name }}
@@ -1148,7 +1148,7 @@ jobs:
 
   #   steps:
   #     - name: Checkout
-  #       uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+  #       uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5.0.1
   #       with:
   #         submodules: true
   #         repository: ${{ github.event.pull_request.head.repo.full_name }}
