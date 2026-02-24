@@ -386,6 +386,16 @@ To access more examples, navigate to the [Examples](#examples-) section.
     # Default: "false"
     exclude_submodules: ''
 
+    # Exclude symlinks from changed files.
+    # Type: boolean
+    # Default: "false"
+    exclude_symlinks: ''
+
+    # Do not fail when base and head SHAs are identical.
+    # Type: boolean
+    # Default: "false"
+    skip_same_sha: ''
+
     # Fail when the initial diff 
     # fails. 
     # Type: boolean
