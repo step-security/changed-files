@@ -386,6 +386,11 @@ To access more examples, navigate to the [Examples](#examples-) section.
     # Default: "false"
     exclude_submodules: ''
 
+    # Exclude symlinks from changed files.
+    # Type: boolean
+    # Default: "false"
+    exclude_symlinks: ''
+
     # Fail when the initial diff 
     # fails. 
     # Type: boolean
@@ -649,6 +654,12 @@ To access more examples, navigate to the [Examples](#examples-) section.
     # Type: boolean
     # Default: "false"
     skip_initial_fetch: ''
+
+    # Do not fail when base 
+    # and head SHAs are identical. 
+    # Type: boolean
+    # Default: "false"
+    skip_same_sha: ''
 
     # Tags pattern to ignore.
     # Type: string
