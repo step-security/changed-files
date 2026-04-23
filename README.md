@@ -1,3 +1,5 @@
+[![StepSecurity Maintained Action](https://raw.githubusercontent.com/step-security/maintained-actions-assets/main/assets/maintained-action-banner.png)](https://docs.stepsecurity.io/actions/stepsecurity-maintained-actions)
+
 # StepSecurity Maintained changed-files Action
 
 [StepSecurity Maintained Actions](https://docs.stepsecurity.io/actions/stepsecurity-actions) are usually exclusive to StepSecurity enterprise customers. However, in an effort to help the community with [the tj-actions/changed-files security incident](https://www.stepsecurity.io/blog/harden-runner-detection-tj-actions-changed-files-action-is-compromised), we are making this StepSecurity Maintained Action **freely available to everyone**.

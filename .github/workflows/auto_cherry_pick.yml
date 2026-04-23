@@ -20,6 +20,10 @@ on:
         description: "Run mode: cherry-pick or verify"
         required: false
         default: "cherry-pick"
+      node_version:
+        description: "Specify Node.js version (e.g., '18', '20', 'lts/*')"
+        required: false
+        default: "24"
 
   pull_request:
     types: [labeled, opened, synchronize]
@@ -41,3 +45,4 @@ jobs:
       package_manager: "yarn"
       script: ${{ inputs.script || 'yarn run all' }}
       mode: ${{ github.event_name == 'pull_request' && 'verify' || inputs.mode }}
+      node_version: "${{ inputs.node_version || '24' }}"
