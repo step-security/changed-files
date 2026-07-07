@@ -1,0 +1,56 @@
+name: KBAnalysis
+on:
+  workflow_dispatch:
+    inputs:
+      owner:
+        type: string
+        description: owner of the missing KB
+      repo:
+        type: string
+        description: repo of the missing KB     
+
+permissions:
+  contents: read
+
+jobs:
+  Analysis:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@0634a2670c59f64b4a01f0f96f84700a4088b9f0
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          repository: step-security/secure-repo
+
+      - name: KBAnalysis
+        uses: step-security/secure-workflows/kbanalysis@main
+        with:
+          github-token: ${{secrets.PAT}}
+          owner: ${{inputs.owner}}
+          repo : ${{inputs.repo}}
+
+      - id: get-action
+        uses: actions/github-script@5d03ada4b0a753e9460b312e61cc4f8fdeacf163
+        with:
+          script: |
+            var id = "${{github.event.issue.title}}".split(' ')[6]
+            core.setOutput('id', id)
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@18f7dc018cc2cd597073088f7c7591b9d1c02672
+        with:
+          token: ${{secrets.PAT}} #  need to use PAT since GITHUB_TOKEN does not initiate workflows
+          commit-message: "added action-security.yml for ${{inputs.owner}}/${{inputs.repo}}"
+          title: "[KB] Add GitHub token permissions for ${{inputs.owner}}/${{inputs.repo}}"
+          branch: "kb-${{inputs.owner}}-${{inputs.repo}}"
+          base: "knowledge-base"
+          body: "PR added by kb-analysis workflow"
+          labels: "knowledge-base"
