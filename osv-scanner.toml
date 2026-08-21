@@ -17,3 +17,31 @@ reason = "undici: WebSocket client exception; action does not use WebSockets"
 [[IgnoredVulns]]
 id = "GHSA-4992-7rv2-5pvq"
 reason = "undici: CRLF injection via upgrade option; not used by @actions/github or @actions/http-client"
+
+[[IgnoredVulns]]
+id = "GHSA-35p6-xmwp-9g52"
+reason = "undici: idle keep-alive socket response injection; action only connects to GitHub API, no attacker-controlled intermediary"
+
+[[IgnoredVulns]]
+id = "GHSA-8xcm-r25x-g524"
+reason = "undici: retry interceptor Content-Length mismatch; action does not use undici's retry interceptor"
+
+[[IgnoredVulns]]
+id = "GHSA-g8m3-5g58-fq7m"
+reason = "undici: Set-Cookie SameSite attribute downgrade via permissive parsing; action does not parse or forward cookies"
+
+[[IgnoredVulns]]
+id = "GHSA-m8rv-5g2x-5cg5"
+reason = "undici: CRLF injection via blob-like object type property; action does not pass blob-like objects to undici"
+
+[[IgnoredVulns]]
+id = "GHSA-p88m-4jfj-68fv"
+reason = "undici: cookie percent-decode injection into response headers; action does not parse or forward cookies"
+
+[[IgnoredVulns]]
+id = "GHSA-v3r7-h72x-cjcm"
+reason = "undici: CRLF injection via setCookie domain/unparsed parameters; action does not use cookie setting functionality"
+
+[[IgnoredVulns]]
+id = "GHSA-vxpw-j846-p89q"
+reason = "undici: WebSocket continuation frame memory exhaustion; action does not use WebSockets"
